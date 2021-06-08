@@ -3,53 +3,40 @@ from typing import List
 from unittest import TestCase
 
 
-def matches(s1: str, s2: str) -> bool:
-    differences = 0
-    for i in range(len(s1)):
-        differences += s1[i] != s2[i]
-        if differences > 1:
-            return False
-    return True
+def possible_neighbours(word):
+    for i in range(len(word)):
+        yield word[:i] + '*' + word[(i + 1):]
 
 
 class Solution:
+
     def ladderLength(self, beginWord: str, endWord: str, wordList: List[str]) -> int:
-        dict = set(wordList)
-        my_queue = Queue()
-        word_size = len(beginWord)
-        my_queue.put(beginWord)
-        if beginWord in dict:
-            dict.remove(beginWord)
-        distance = 1
-        q_size = 1
-        while not my_queue.empty():
-            n = q_size
-            while not n > 0:
-                n -= 1
-                current = my_queue.get()
-                q_size -= 1
-                if current == endWord:
-                    return distance
-                dict.remove(current)
-                for j in range(word_size):
-                    c = current[j]
-                    for k in range(26):
-                        # current[j] = str(97 + k)
-                        if current in dict:
-                            q_size += 1
-                            my_queue.put(current)
-                    current[j] = c
-            distance += 1
-            # current = my_queue.get()
+        parsed_words = {}
+        for word in wordList:
+            for neighbour in possible_neighbours(word):
+                parsed_words[neighbour] = parsed_words.get(neighbour, []) + [word]
+        queue = Queue()
+        queue.put((beginWord, 1))
+        visited = set()
+        while not queue.empty():
+            word, steps = queue.get()
+            if word not in visited:
+                visited.add(word)
+                if word == endWord:
+                    return steps
+                for neighbour in possible_neighbours(word):
+                    neighbours = parsed_words.get(neighbour, [])
+                    for next in neighbours:
+                        queue.put((next, steps + 1))
         return 0
+
 
 class WordLatter(TestCase):
     def test_find_ladders(self):
         tests = [
             ("hit", "cog", ["hot", "dot", "dog", "lot", "log", "cog"], 5),
             ("hit", "cog", ["hot", "dot", "dog", "lot", "log"], 0),
-            ]
-        a = [(
+            (
                 "catch",
                 "choir",
                 ["tours", "awake", "goats", "crape", "boron", "payee", "waken", "cares", "times", "piled", "maces",
